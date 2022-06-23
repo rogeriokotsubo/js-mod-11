@@ -1,7 +1,9 @@
-document.getElementById('btn-input').addEventListener('click', Save);
-document.getElementById('btn-list').addEventListener('click', List);
-document.getElementById('btn-cancel').addEventListener('click', Cancel);
-document.getElementById('btn-filter').addEventListener('click', List);
+document.getElementById('btn-input').addEventListener('click', save);
+document.getElementById('btn-list').addEventListener('click', function() {
+  list(true)});
+document.getElementById('btn-cancel').addEventListener('click', cancel);
+document.getElementById('btn-filter').addEventListener('click', function() {
+  list(false)});
 
 const msg = document.querySelector('#msg');
 let produtos = [];
@@ -9,14 +11,15 @@ let produto = {};
 let id = 0;
 let idSel = 0;
 let newProduct = 1;
+let updateList = false;
 
-function Save() {
+function save() {
   valor = parseFloat(document.querySelector('#value').value.replace(",", "."));
   nome = document.querySelector("#name").value.trim();
   descricao = document.querySelector("#description").value.trim();
 
   try {
-    CheckValues();
+    checkValues();
   } catch (errorMsg) {
     msg.textContent=errorMsg;
     return;
@@ -38,7 +41,7 @@ function Save() {
     } else {
         let Id = 0;
         try{
-          Id = Search(produtos, idSel);   // idSel contem o id do produto selecionado
+          Id = search(produtos, idSel);   // idSel contem o id do produto selecionado
         } catch (error){
           msg.textContent=error;
           return;
@@ -47,19 +50,20 @@ function Save() {
         produtos[Id].nome = nome;
         produtos[Id].descricao = descricao;
         produtos[Id].valor = valor;
-        msg.textContent = `Produto ${produtos[Id].nome} alterado com sucesso`;
         if (document.querySelector('#ctn-details').style.display==='block'){
-          Show(idSel);
+          show(idSel);
         } 
-    }
-    List();    
+        msg.textContent = `Produto ${produtos[Id].nome} alterado com sucesso`;
+    }  
+    list(false);    
+    clearInputs();
   } catch (error){
     msg.textContent=error;
     return;
   }
 }  
 
-function CheckValues(){
+function checkValues(){
   if (isNaN(valor)){
     throw new Error(`Valor do produto inválido! (${valor})`);
   }
@@ -87,13 +91,22 @@ function CheckValues(){
   }
 }
 
-function List(){
+function list(isUpdated){
+  if (isUpdated){
+    updateList = true;
+  };
+  if (updateList==false){
+    if (document.querySelector('#ctn-table').style.display!='block'){
+      return;
+    };
+  };  
+
   let numeroDeProdutos = -1;
   if (produtos.length===0){
  //   document.querySelector('#ctn-table').style.display = 'none';
     msg.innerHTML = `Nenhum produto cadastrado`;
   } else {
-    let filtered = Filter();
+    let filtered = filterProd();
 
     const tbl = document.querySelector('#tbl-products');
     tbl.innerHTML = `<tr> 
@@ -104,31 +117,35 @@ function List(){
                     </tr>`
     for (let i =0; i < filtered.length; i++){                     
       tbl.innerHTML += `<tr> 
-                          <td class="show-product" onclick="Show(${filtered[i].id})">${filtered[i].nome}</td> 
+                          <td class="show-product" onclick="show(${filtered[i].id})">${filtered[i].nome}</td> 
                           <td>${filtered[i].valor.toFixed(2)}</td>
-                          <td class="edit-icon" onclick="Edit(${filtered[i].id})"><span class="material-icons">edit</span></td>
-                          <td class="del-icon" onclick="Delete(${filtered[i].id})"><span class="material-icons">delete</span></td>
+                          <td class="edit-icon" onclick="edit(${filtered[i].id})"><span class="material-icons">edit</span></td>
+                          <td class="del-icon" onclick="deleteProd(${filtered[i].id})"><span class="material-icons">delete</span></td>
                         </tr>`
     }
     document.getElementById('th-prod').addEventListener('click', function() {
-        Sort(0)});
+        sort('name')});
     document.getElementById('th-val').addEventListener('click', function() {
-        Sort(1)});
+        sort('value')});
     document.querySelector('#ctn-table').style.display = 'block';
     if (numeroDeProdutos===0){
-      Cancel();
+      cancel();
       msg.innerHTML = `Não foram encontrados produtos conforme chave de pesquisa!`;  
     } else if (numeroDeProdutos>0) {
-      Cancel();
-      msg.innerHTML = `Foram encontrado(s) ${numeroDeProdutos} produto(s)!`;
+      cancel();
+      if (numeroDeProdutos>1){
+        msg.innerHTML = `Foram encontrados ${numeroDeProdutos} produtos!`;
+      } else {
+        msg.innerHTML = `Foi encontrado ${numeroDeProdutos} produto!`;
+      }
     }
   }  
 
-  function Filter(){
+  function filterProd(){
     const filtro = document.querySelector("#filter-word").value.trim();
     let filtered = [];
     if (filtro===''){
-      msg.innerHTML = ``;
+//      msg.innerHTML = `&nbsp`;
       filtered = produtos;
       document.querySelector("#btn-filter").style.color='#000';
       return filtered;
@@ -148,10 +165,10 @@ function List(){
   }
 }
 
-function Edit(id){
+function edit(id){
   let Id = 0;
   try{
-    Id = Search(produtos, id);
+    Id = search(produtos, id);
   } catch (error){
     msg.textContent=error;
     return;
@@ -166,20 +183,20 @@ function Edit(id){
   document.querySelector('#description').value = produtos[Id].descricao;
 
   if (document.querySelector('#ctn-details').style.display==='block'){
-    Show(idSel);
+    show(idSel);
   }  
 }
 
-function Sort(type){
-  if (type===0){
-    SortbyName();
+function sort(type){
+  if (type==='name'){
+    sortbyName();
   }
-  if (type===1){
-    SortbyVal();
+  if (type==='value'){
+    sortbyVal();
   }
-  List();
+  list(false);
 
-  function SortbyName(){
+  function sortbyName(){
     produtos.sort(function (a,b){
       if (a.nome>b.nome){
         return 1;
@@ -190,7 +207,7 @@ function Sort(type){
     })
   }
 
-  function SortbyVal(){
+  function sortbyVal(){
     produtos.sort(function (a,b){
       if (a.valor>b.valor){
         return 1;
@@ -203,21 +220,21 @@ function Sort(type){
 }
 
 
-function Delete(id){
+function deleteProd(id){
   let Id = 0;
   try{
-    Id = Search(produtos, id);
+    Id = search(produtos, id);
   } catch (error){
     msg.textContent=error;
     return;
   }
 
   produtos.splice(Id,1);
-  Cancel();
-  List();
+  cancel();
+  list(false);
 }
 
-function Search(arr, id){    // retorna o id do array arr
+function search(arr, id){    // retorna o id do array arr
   for (let i = 0; i < arr.length; i++){
     if (arr[i].id === id){
       return i;
@@ -226,22 +243,22 @@ function Search(arr, id){    // retorna o id do array arr
   throw new Error(`Produto não encontrado! (${id})`);
 }
 
-function Show(id){
+function show(id){
   let Id = 0;
   try{
-    Id = Search(produtos, id);
+    Id = search(produtos, id);
   } catch (error){
     msg.textContent=error;
     return;
   }
 
   msg.innerHTML = `&nbsp`;
-  newProduct = 0;
-  idSel = id;
-  document.querySelector("#btn-input").textContent='Salvar produto';
-  document.querySelector('#value').value = produtos[Id].valor;
-  document.querySelector('#name').value = produtos[Id].nome;
-  document.querySelector('#description').value = produtos[Id].descricao;
+  // newProduct = 0;
+  // idSel = id;
+  // document.querySelector("#btn-input").textContent='Salvar produto';
+  // document.querySelector('#value').value = produtos[Id].valor;
+  // document.querySelector('#name').value = produtos[Id].nome;
+  // document.querySelector('#description').value = produtos[Id].descricao;
 
   const detail = document.querySelector('#tbl-details');
   const date = new Date(produtos[Id].incluidoEm);
@@ -271,9 +288,10 @@ function Show(id){
                       </tr>`               
   
   document.querySelector('#ctn-details').style.display = 'block';
+  displayMessage();
 }
 
-function Cancel(){
+function cancel(){
   newProduct = 1;
   msg.innerHTML = `&nbsp`;
   document.querySelector('#value').value='';
@@ -281,4 +299,34 @@ function Cancel(){
   document.querySelector("#description").value='';
   document.querySelector("#btn-input").textContent='Incluir produto';
   document.querySelector('#ctn-details').style.display = 'none';
+}
+
+function clearInputs(){
+  newProduct = 1;
+  document.querySelector('#value').value='';
+  document.querySelector("#name").value='';
+  document.querySelector("#description").value='';
+  document.querySelector("#btn-input").textContent='Incluir produto';
+  document.querySelector('#ctn-details').style.display = 'none';
+}
+
+
+function displayMessage() {
+  const html = document.querySelector('html');
+
+  const panel = document.createElement('div');
+  panel.setAttribute('class', 'msgBox');
+  html.appendChild(panel);
+  
+  const msg = document.createElement('p');
+  msg.textContent = 'This is a message box';
+  panel.appendChild(msg);
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'x';
+  panel.appendChild(closeBtn);
+  
+  closeBtn.onclick = function() {
+    panel.parentNode.removeChild(panel);
+  }
 }
