@@ -27,7 +27,7 @@ function save() {
 
   try{
     if (newProduct===1){  // adding new product
-        document.querySelector('#ctn-details').style.display='none';
+//        document.querySelector('#ctn-details').style.display='none';
         id += 1;
         produto = {
             id: id,
@@ -50,9 +50,9 @@ function save() {
         produtos[Id].nome = nome;
         produtos[Id].descricao = descricao;
         produtos[Id].valor = valor;
-        if (document.querySelector('#ctn-details').style.display==='block'){
-          show(idSel);
-        } 
+  //      if (document.querySelector('#ctn-details').style.display==='block'){
+  //        show(idSel);
+   //     } 
         msg.textContent = `Produto ${produtos[Id].nome} alterado com sucesso`;
     }  
     list(false);    
@@ -103,7 +103,7 @@ function list(isUpdated){
 
   let numeroDeProdutos = -1;
   if (produtos.length===0){
- //   document.querySelector('#ctn-table').style.display = 'none';
+    document.querySelector('#ctn-table').style.display = 'none';
     msg.innerHTML = `Nenhum produto cadastrado`;
   } else {
     let filtered = filterProd();
@@ -182,9 +182,9 @@ function edit(id){
   document.querySelector('#name').value = produtos[Id].nome;
   document.querySelector('#description').value = produtos[Id].descricao;
 
-  if (document.querySelector('#ctn-details').style.display==='block'){
-    show(idSel);
-  }  
+  // if (document.querySelector('#ctn-details').style.display==='block'){
+  //   show(idSel);
+  // }  
 }
 
 function sort(type){
@@ -251,19 +251,41 @@ function show(id){
     msg.textContent=error;
     return;
   }
-
   msg.innerHTML = `&nbsp`;
-  // newProduct = 0;
-  // idSel = id;
-  // document.querySelector("#btn-input").textContent='Salvar produto';
-  // document.querySelector('#value').value = produtos[Id].valor;
-  // document.querySelector('#name').value = produtos[Id].nome;
-  // document.querySelector('#description').value = produtos[Id].descricao;
+  displayMessage(Id);
+}
+
+function cancel(){
+  clearInputs();
+  msg.innerHTML=`&nbsp`;
+}
+
+function clearInputs(){
+  newProduct = 1;
+  document.querySelector('form').reset();
+  document.querySelector("#btn-input").textContent='Incluir produto';
+}
+
+function displayMessage(Id) {
+  showCover();
+  const cover = document.querySelector('#cover-div');
+
+  const panel = document.createElement('div');
+  panel.setAttribute('id', 'ctn-details');
+  cover.appendChild(panel);
+  
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = 'x';
+  panel.appendChild(closeBtn);
+
+  const table = document.createElement('table');
+  table.setAttribute('id', 'tbl-details');
+  panel.appendChild(table);
 
   const detail = document.querySelector('#tbl-details');
   const date = new Date(produtos[Id].incluidoEm);
 
-  detail.innerHTML = `<tr> 
+    detail.innerHTML = `<tr> 
                         <th colspan="2">Informações do Produto</th> 
                       </tr>
                       <tr> 
@@ -286,47 +308,21 @@ function show(id){
                         <th>Incluído Em</th>
                         <td>${date.toLocaleDateString()} - ${date.toLocaleTimeString()}</td>
                       </tr>`               
-  
-  document.querySelector('#ctn-details').style.display = 'block';
-  displayMessage();
-}
-
-function cancel(){
-  newProduct = 1;
-  msg.innerHTML = `&nbsp`;
-  document.querySelector('#value').value='';
-  document.querySelector("#name").value='';
-  document.querySelector("#description").value='';
-  document.querySelector("#btn-input").textContent='Incluir produto';
-  document.querySelector('#ctn-details').style.display = 'none';
-}
-
-function clearInputs(){
-  newProduct = 1;
-  document.querySelector('#value').value='';
-  document.querySelector("#name").value='';
-  document.querySelector("#description").value='';
-  document.querySelector("#btn-input").textContent='Incluir produto';
-  document.querySelector('#ctn-details').style.display = 'none';
-}
-
-
-function displayMessage() {
-  const html = document.querySelector('html');
-
-  const panel = document.createElement('div');
-  panel.setAttribute('class', 'msgBox');
-  html.appendChild(panel);
-  
-  const msg = document.createElement('p');
-  msg.textContent = 'This is a message box';
-  panel.appendChild(msg);
-  
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = 'x';
-  panel.appendChild(closeBtn);
-  
+    
   closeBtn.onclick = function() {
-    panel.parentNode.removeChild(panel);
-  }
+    hideCover();
+  };
+}
+
+function showCover() {
+  let coverDiv = document.createElement('div');
+  coverDiv.id = 'cover-div';
+  // make the page unscrollable while the modal form is open
+  document.body.style.overflowY = 'hidden';
+  document.body.append(coverDiv);
+}
+
+function hideCover() {
+  document.getElementById('cover-div').remove();
+  document.body.style.overflowY = '';
 }
