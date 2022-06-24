@@ -6,12 +6,12 @@ document.getElementById('btn-filter').addEventListener('click', function() {
   list(false)});
 
 const msg = document.querySelector('#msg');
-let produtos = [];
-let produto = {};
-let id = 0;
-let idSel = 0;
-let newProduct = 1;
-let updateList = false;
+let produto = {};        // objeto produto 
+let produtos = [];       // array de produtos
+let id = 0;              // contador id 
+let idSel = 0;           // id do produto selecionado
+let newProduct = 1;      // indicador se novo produto: 1 novo, 0 edição
+let updateList = false;  // indicador se lista está visível.
 
 function save() {
   valor = parseFloat(document.querySelector('#value').value.replace(",", "."));
@@ -27,7 +27,6 @@ function save() {
 
   try{
     if (newProduct===1){  // adding new product
-//        document.querySelector('#ctn-details').style.display='none';
         id += 1;
         produto = {
             id: id,
@@ -50,9 +49,7 @@ function save() {
         produtos[Id].nome = nome;
         produtos[Id].descricao = descricao;
         produtos[Id].valor = valor;
-  //      if (document.querySelector('#ctn-details').style.display==='block'){
-  //        show(idSel);
-   //     } 
+
         msg.textContent = `Produto ${produtos[Id].nome} alterado com sucesso`;
     }  
     list(false);    
@@ -95,7 +92,7 @@ function list(isUpdated){
   if (isUpdated){
     updateList = true;
   };
-  if (updateList==false){
+  if (updateList===false){
     if (document.querySelector('#ctn-table').style.display!='block'){
       return;
     };
@@ -105,6 +102,7 @@ function list(isUpdated){
   if (produtos.length===0){
     document.querySelector('#ctn-table').style.display = 'none';
     msg.innerHTML = `Nenhum produto cadastrado`;
+    updateList = false;
   } else {
     let filtered = filterProd();
 
@@ -115,14 +113,28 @@ function list(isUpdated){
                         <th>Editar</th>
                         <th>Apagar</th>
                     </tr>`
-    for (let i =0; i < filtered.length; i++){                     
-      tbl.innerHTML += `<tr> 
-                          <td class="show-product" onclick="show(${filtered[i].id})">${filtered[i].nome}</td> 
-                          <td>${filtered[i].valor.toFixed(2)}</td>
-                          <td class="edit-icon" onclick="edit(${filtered[i].id})"><span class="material-icons">edit</span></td>
-                          <td class="del-icon" onclick="deleteProd(${filtered[i].id})"><span class="material-icons">delete</span></td>
-                        </tr>`
+    for (let i = 0; i < filtered.length; i++){     
+      const newRow = tbl.insertRow(i+1);
+
+      const newCell1 = newRow.insertCell(0);
+      const newCell2 = newRow.insertCell(1);
+      const newCell3 = newRow.insertCell(2);
+      const newCell4 = newRow.insertCell(3);
+
+      newCell1.innerHTML = `${filtered[i].nome}`;
+      newCell2.innerHTML = `${filtered[i].valor.toFixed(2)}`;
+      newCell3.innerHTML = `<span class="material-icons">edit</span>`;
+      newCell4.innerHTML = `<span class="material-icons">delete</span>`;
+      
+      newCell1.classList.add('show-product');
+      newCell3.classList.add('edit-icon');
+      newCell4.classList.add('del-icon');
+
+      newCell1.addEventListener('click', function() {show(filtered[i].id)});
+      newCell3.addEventListener('click', function() {edit(filtered[i].id)});
+      newCell4.addEventListener('click', function() {deleteProd(filtered[i].id)});
     }
+
     document.getElementById('th-prod').addEventListener('click', function() {
         sort('name')});
     document.getElementById('th-val').addEventListener('click', function() {
@@ -145,7 +157,6 @@ function list(isUpdated){
     const filtro = document.querySelector("#filter-word").value.trim();
     let filtered = [];
     if (filtro===''){
-//      msg.innerHTML = `&nbsp`;
       filtered = produtos;
       document.querySelector("#btn-filter").style.color='#000';
       return filtered;
@@ -181,10 +192,6 @@ function edit(id){
   document.querySelector('#value').value = produtos[Id].valor;
   document.querySelector('#name').value = produtos[Id].nome;
   document.querySelector('#description').value = produtos[Id].descricao;
-
-  // if (document.querySelector('#ctn-details').style.display==='block'){
-  //   show(idSel);
-  // }  
 }
 
 function sort(type){
@@ -317,8 +324,7 @@ function displayMessage(Id) {
 function showCover() {
   let coverDiv = document.createElement('div');
   coverDiv.id = 'cover-div';
-  // make the page unscrollable while the modal form is open
-  document.body.style.overflowY = 'hidden';
+  document.body.style.overflowY = 'hidden';  // tirando scroll 
   document.body.append(coverDiv);
 }
 
